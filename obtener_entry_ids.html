@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herramienta para Obtener Entry IDs de Google Forms</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        code {
+            background-color: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        pre {
+            background-color: #1f2937;
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Herramienta para Obtener Entry IDs</h1>
+        
+        <div class="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h2 class="font-bold text-blue-800 mb-2">Método 1: Usando Google Apps Script (Recomendado)</h2>
+            <p class="text-gray-700 mb-4">Este es el método más fácil. El script crea el formulario automáticamente.</p>
+            <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                <li>Abre el archivo <code>crear_formulario_google.gs</code></li>
+                <li>Ve a <a href="https://script.google.com" target="_blank" class="text-blue-600 underline">script.google.com</a></li>
+                <li>Crea un nuevo proyecto</li>
+                <li>Pega el código del archivo .gs</li>
+                <li>Ejecuta la función <code>crearFormulario25N()</code></li>
+                <li>Copia la configuración que aparece en el log</li>
+            </ol>
+        </div>
+
+        <div class="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h2 class="font-bold text-yellow-800 mb-2">Método 2: Si ya tienes un formulario creado</h2>
+            <p class="text-gray-700 mb-4">Si ya creaste el formulario manualmente, usa este método:</p>
+            
+            <h3 class="font-semibold mt-4 mb-2">Paso 1: Obtener el Form ID</h3>
+            <ol class="list-decimal list-inside space-y-2 text-gray-700 mb-4">
+                <li>Abre tu formulario de Google en modo vista previa</li>
+                <li>La URL será: <code>https://docs.google.com/forms/d/e/FORM_ID/viewform</code></li>
+                <li>Copia el <code>FORM_ID</code> (la parte entre <code>/d/e/</code> y <code>/viewform</code>)</li>
+            </ol>
+
+            <h3 class="font-semibold mt-4 mb-2">Paso 2: Obtener los Entry IDs</h3>
+            <p class="text-gray-700 mb-2">Abre la consola del navegador (F12) y ejecuta este código:</p>
+            <pre id="scriptCode">// 1. Abre tu formulario de Google en modo EDICIÓN
+// 2. Abre la consola del navegador (F12)
+// 3. Pega y ejecuta este código:
+
+(function() {
+    const form = document.querySelector('form');
+    if (!form) {
+        console.error('No se encontró el formulario. Asegúrate de estar en modo edición.');
+        return;
+    }
+    
+    const items = form.querySelectorAll('[name^="entry."]');
+    const entryIds = {};
+    
+    items.forEach((input, index) => {
+        const entryId = input.name;
+        const questionNum = index + 1;
+        entryIds[`q${questionNum}`] = entryId;
+    });
+    
+    // Eliminar duplicados
+    const uniqueIds = {};
+    Object.keys(entryIds).forEach(key => {
+        const id = entryIds[key];
+        if (!Object.values(uniqueIds).includes(id)) {
+            uniqueIds[key] = id;
+        }
+    });
+    
+    console.log('=== CONFIGURACIÓN PARA 25.HTML ===');
+    console.log('const GOOGLE_FORM_CONFIG = {');
+    console.log('    enabled: true,');
+    console.log('    formId: \'TU_FORM_ID_AQUI\', // Reemplaza con tu Form ID');
+    console.log('    entryIds: {');
+    Object.keys(uniqueIds).forEach(key => {
+        console.log(`        ${key}: '${uniqueIds[key]}',`);
+    });
+    console.log('    }');
+    console.log('};');
+    
+    // También mostrar en un formato más legible
+    console.log('\n=== ENTRY IDS ===');
+    Object.keys(uniqueIds).forEach(key => {
+        console.log(`${key}: ${uniqueIds[key]}`);
+    });
+})();</pre>
+            <button onclick="copiarScript()" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                Copiar Script
+            </button>
+        </div>
+
+        <div class="mb-8 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <h2 class="font-bold text-green-800 mb-2">Método 3: Inspeccionar Elemento (Manual)</h2>
+            <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                <li>Abre tu formulario en modo <strong>edición</strong></li>
+                <li>Para cada pregunta:
+                    <ul class="list-disc list-inside ml-6 mt-2">
+                        <li>Haz clic derecho en la pregunta</li>
+                        <li>Selecciona "Inspeccionar" o presiona F12</li>
+                        <li>Busca en el código <code>name="entry.XXXXXXXXX"</code></li>
+                        <li>Copia el valor completo (ej: <code>entry.123456789</code>)</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+            <h2 class="font-bold text-purple-800 mb-2">Una vez que tengas los IDs:</h2>
+            <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                <li>Abre el archivo <code>25.html</code></li>
+                <li>Busca la sección <code>GOOGLE_FORM_CONFIG</code></li>
+                <li>Reemplaza los valores con los que obtuviste</li>
+                <li>Cambia <code>enabled: false</code> a <code>enabled: true</code></li>
+                <li>Guarda el archivo</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function copiarScript() {
+            const code = document.getElementById('scriptCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Script copiado al portapapeles. Pégalo en la consola del navegador.');
+            });
+        }
+    </script>
+</body>
+</html>
+

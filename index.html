@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Anónimo - Acceso</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: #111827;
+            background-image: 
+                radial-gradient(at 47% 33%, hsl(162.00, 77%, 40%) 0, transparent 59%),
+                radial-gradient(at 82% 65%, hsl(218.00, 39%, 11%) 0, transparent 55%);
+        }
+        .form-container {
+            background-color: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.125);
+        }
+        .tab-underline {
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            height: 2px;
+            background-color: #3b82f6;
+            transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+        }
+        .input-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+        .error-banner {
+            transition: all 0.3s ease-in-out;
+            transform-origin: top;
+        }
+        .error-banner.hidden {
+            transform: scaleY(0.9) translateY(-10px);
+            opacity: 0;
+            height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+        .btn-primary {
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8 font-sans">
+    <div class="max-w-md w-full space-y-6">
+        <!-- Logo y Título -->
+        <div class="text-center">
+            <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-blue-500/20 text-blue-400">
+                <i class="fas fa-comments fa-2x"></i>
+            </div>
+            <h2 class="mt-4 text-3xl font-extrabold text-white">
+                Bienvenido al Chat
+            </h2>
+            <p class="mt-2 text-sm text-gray-400">Inicia sesión o regístrate para continuar</p>
+        </div>
+
+        <div class="form-container rounded-2xl shadow-2xl p-8 space-y-6">
+            <!-- Tabs -->
+            <div class="relative border-b-2 border-gray-700">
+                <div class="flex">
+                    <button id="tab-login" class="flex-1 py-3 px-4 text-center font-semibold text-gray-300 focus:outline-none">
+                        Iniciar Sesión
+                    </button>
+                    <button id="tab-register" class="flex-1 py-3 px-4 text-center font-semibold text-gray-500 focus:outline-none">
+                        Registro
+                    </button>
+                </div>
+                <div id="tab-underline" class="tab-underline"></div>
+            </div>
+
+            <!-- Formulario de Login -->
+            <form id="login-form" class="space-y-6">
+                <div class="relative">
+                    <div class="input-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <input id="login-username" name="username" type="text" required class="pl-10 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombre de Usuario">
+                </div>
+                <div class="relative">
+                    <div class="input-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <input id="login-password" name="password" type="password" required class="pl-10 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Contraseña">
+                </div>
+                <div class="relative">
+                    <div class="input-icon">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <input id="login-network-key" name="networkKey" type="password" required class="pl-10 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Network Key">
+                </div>
+                <div id="login-error" class="hidden error-banner bg-red-500/10 border-l-4 border-red-400 text-red-400 px-4 py-3" role="alert"></div>
+                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 btn-primary">Iniciar Sesión</button>
+            </form>
+
+            <!-- Formulario de Registro -->
+            <form id="register-form" class="hidden space-y-6">
+                <div class="relative">
+                    <div class="input-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <input id="register-username" name="username" type="text" required class="pl-10 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombre de Usuario (3-20 caracteres)">
+                </div>
+                <div class="relative">
+                    <div class="input-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <input id="register-password" name="password" type="password" required class="pl-10 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Contraseña (mín. 6 caracteres)">
+                </div>
+                <div class="relative">
+                    <div class="input-icon">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <input id="register-network-key" name="networkKey" type="password" required class="pl-10 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Network Key">
+                </div>
+                <div id="register-error" class="hidden error-banner bg-red-500/10 border-l-4 border-red-400 text-red-400 px-4 py-3" role="alert"></div>
+                <div id="register-success" class="hidden error-banner bg-green-500/10 border-l-4 border-green-400 text-green-400 px-4 py-3" role="alert"></div>
+                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 btn-primary">Registrarse</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const tabLogin = document.getElementById('tab-login');
+        const tabRegister = document.getElementById('tab-register');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const underline = document.getElementById('tab-underline');
+
+        function switchTab(tab) {
+            const errorDivs = document.querySelectorAll('.error-banner');
+            errorDivs.forEach(div => div.classList.add('hidden'));
+
+            if (tab === 'login') {
+                tabLogin.classList.remove('text-gray-500');
+                tabLogin.classList.add('text-gray-300');
+                tabRegister.classList.add('text-gray-500');
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                underline.style.transform = `translateX(0%)`;
+                underline.style.width = tabLogin.offsetWidth + 'px';
+            } else {
+                tabRegister.classList.remove('text-gray-500');
+                tabRegister.classList.add('text-gray-300');
+                tabLogin.classList.add('text-gray-500');
+                registerForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+                underline.style.transform = `translateX(${tabLogin.offsetWidth}px)`;
+                underline.style.width = tabRegister.offsetWidth + 'px';
+            }
+        }
+
+        tabLogin.addEventListener('click', () => switchTab('login'));
+        tabRegister.addEventListener('click', () => switchTab('register'));
+        
+        window.addEventListener('load', () => switchTab('login'));
+        window.addEventListener('resize', () => switchTab(loginForm.classList.contains('hidden') ? 'register' : 'login'));
+
+        function showError(form, message) {
+            const errorDiv = document.getElementById(`${form}-error`);
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.getElementById('register-success');
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+        }
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            document.getElementById('register-error').classList.add('hidden');
+            document.getElementById('register-success').classList.add('hidden');
+
+            const formData = {
+                username: document.getElementById('register-username').value,
+                password: document.getElementById('register-password').value,
+                networkKey: document.getElementById('register-network-key').value
+            };
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showSuccess('Registro exitoso. Ahora puedes iniciar sesión.');
+                    setTimeout(() => switchTab('login'), 2000);
+                } else {
+                    showError('register', data.error || 'Error al registrarse');
+                }
+            } catch (error) {
+                showError('register', 'Error de conexión. Verifica que el servidor esté corriendo.');
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            document.getElementById('login-error').classList.add('hidden');
+
+            const formData = {
+                username: document.getElementById('login-username').value,
+                password: document.getElementById('login-password').value,
+                networkKey: document.getElementById('login-network-key').value
+            };
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    window.location.href = '/chat.html';
+                } else {
+                    showError('login', data.error || 'Error al iniciar sesión');
+                }
+            } catch (error) {
+                showError('login', 'Error de conexión. Verifica que el servidor esté corriendo.');
+            }
+        });
+    </script>
+</body>
+</html>

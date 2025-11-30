@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Información de Conexión - Chat Anónimo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-500 to-purple-600 min-h-screen py-8 px-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white/95 rounded-2xl shadow-2xl p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Información de Conexión</h1>
+                <p class="text-gray-600 text-sm">Usa estas URLs para acceder al chat desde distintos dispositivos.</p>
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold text-blue-900 mb-2">Acceso local</h2>
+                    <p class="text-sm text-gray-700 mb-2">Para usar desde esta computadora:</p>
+                    <code id="local-url" class="block bg-white p-3 rounded border text-blue-600 font-mono text-lg">Cargando...</code>
+                </div>
+
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold text-green-900 mb-2">Acceso en red local</h2>
+                    <p class="text-sm text-gray-700 mb-2">Comparte esta URL con cualquier dispositivo en la misma red Wi-Fi:</p>
+                    <code id="network-url" class="block bg-white p-3 rounded border text-green-600 font-mono text-lg">Cargando...</code>
+                    <p class="text-xs text-gray-600 mt-2">Compatible con celulares, tablets y laptops conectados al mismo router.</p>
+                </div>
+
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold text-purple-900 mb-3">Acceso desde internet</h2>
+                    <p class="text-sm text-gray-700 mb-3">Para habilitar el acceso exterior necesitas:</p>
+                    <div id="public-url-section" class="hidden mb-4">
+                        <p class="text-sm text-gray-700 mb-2">URL para compartir (si ya configuraste tu router):</p>
+                        <code id="public-url" class="block bg-white p-3 rounded border text-purple-600 font-mono text-lg">Cargando...</code>
+                    </div>
+
+                    <ol class="text-xs text-purple-900 list-decimal list-inside space-y-1">
+                        <li>Configurar port forwarding en tu router hacia el puerto 3000 (o el que uses).</li>
+                        <li>Abrir el mismo puerto en el firewall de tu sistema operativo.</li>
+                        <li>Compartir tu IP pública o usar un servicio de DNS dinámico.</li>
+                    </ol>
+                    <p class="text-xs text-gray-600 mt-3">
+                        Para conocer tu IP pública visita
+                        <a href="https://whatismyipaddress.com/" target="_blank" class="text-purple-600 underline">
+                            whatismyipaddress.com
+                        </a>
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-2">Panel de administración</h2>
+                    <code id="admin-url" class="block bg-white p-2 rounded border text-gray-700 font-mono">Cargando...</code>
+                    <p class="text-xs text-gray-600 mt-2">Solo accesible desde esta computadora (localhost).</p>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-3">Estado del servidor</h2>
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700">
+                        <div>
+                            <dt class="font-medium text-gray-600">Usuarios registrados</dt>
+                            <dd id="info-total-users" class="text-2xl font-bold text-gray-900">-</dd>
+                        </div>
+                        <div>
+                            <dt class="font-medium text-gray-600">Mensajes guardados</dt>
+                            <dd id="info-total-messages" class="text-2xl font-bold text-gray-900">-</dd>
+                        </div>
+                        <div>
+                            <dt class="font-medium text-gray-600">Conexiones activas</dt>
+                            <dd id="info-active-connections" class="text-2xl font-bold text-gray-900">-</dd>
+                        </div>
+                        <div>
+                            <dt class="font-medium text-gray-600">IPs únicas conectadas</dt>
+                            <dd id="info-unique-ips" class="text-2xl font-bold text-gray-900">-</dd>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <dt class="font-medium text-gray-600">Tiempo en línea</dt>
+                            <dd id="info-uptime" class="text-base font-semibold text-gray-900">-</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-3 mt-8">
+                <a href="/" class="flex-1 text-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    Volver al inicio
+                </a>
+                <button onclick="copyAllUrls()" class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                    Copiar URLs
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const statsElements = {
+            totalUsers: document.getElementById('info-total-users'),
+            totalMessages: document.getElementById('info-total-messages'),
+            activeConnections: document.getElementById('info-active-connections'),
+            uniqueIps: document.getElementById('info-unique-ips'),
+            uptime: document.getElementById('info-uptime')
+        };
+
+        fetch('/api/server-info')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('local-url').textContent = data.localUrl;
+                document.getElementById('network-url').textContent = data.networkUrl;
+                document.getElementById('admin-url').textContent = data.adminUrl;
+
+                if (data.publicIP) {
+                    document.getElementById('public-url').textContent = `http://${data.publicIP}:${data.port}`;
+                    document.getElementById('public-url-section').classList.remove('hidden');
+                }
+
+                updateStats(data.stats || {});
+                window.serverInfo = data;
+            })
+            .catch(() => {
+                document.getElementById('local-url').textContent = 'Error al cargar';
+                document.getElementById('network-url').textContent = 'Error al cargar';
+                document.getElementById('admin-url').textContent = 'Error al cargar';
+                updateStats();
+            });
+
+        function updateStats(stats = {}) {
+            statsElements.totalUsers.textContent = stats.totalUsers ?? '-';
+            statsElements.totalMessages.textContent = stats.totalMessages ?? '-';
+            statsElements.activeConnections.textContent = stats.activeConnections ?? '-';
+            statsElements.uniqueIps.textContent = stats.uniqueActiveIPs ?? '-';
+            statsElements.uptime.textContent = typeof stats.uptimeSeconds === 'number'
+                ? formatUptime(stats.uptimeSeconds)
+                : '-';
+        }
+
+        function formatUptime(seconds) {
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            const segments = [];
+            if (hrs) segments.push(`${hrs}h`);
+            if (mins) segments.push(`${mins}m`);
+            segments.push(`${secs}s`);
+            return segments.join(' ');
+        }
+
+        function copyAllUrls() {
+            if (!window.serverInfo) {
+                alert('Espera a que carguen las URLs.');
+                return;
+            }
+
+            const stats = window.serverInfo.stats || {};
+            const text = `
+URLs de conexión - Chat Anónimo
+
+Acceso local:
+${window.serverInfo.localUrl}
+
+Red local:
+${window.serverInfo.networkUrl}
+
+Internet:
+Usa tu IP pública y abre el puerto ${window.serverInfo.port}
+
+Panel de administración:
+${window.serverInfo.adminUrl}
+
+Usuarios registrados: ${stats.totalUsers ?? '-'}
+Mensajes guardados: ${stats.totalMessages ?? '-'}
+Conexiones activas: ${stats.activeConnections ?? '-'}
+IPs únicas conectadas: ${stats.uniqueActiveIPs ?? '-'}
+`.trim();
+
+            navigator.clipboard.writeText(text)
+                .then(() => alert('URLs copiadas al portapapeles.'))
+                .catch(() => alert('No se pudo copiar automáticamente. Copia los valores manualmente.'));
+        }
+    </script>
+</body>
+</html>

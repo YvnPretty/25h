@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Conexión - Chat Anónimo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen py-8 px-4">
+    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-2xl font-bold mb-4">🔍 Test de Conexión</h1>
+        
+        <div id="status" class="mb-4 p-4 rounded-lg">
+            <p class="font-semibold">Verificando conexión...</p>
+        </div>
+
+        <div class="space-y-4">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h2 class="font-semibold mb-2">🌐 Acceso desde Red Local (WiFi):</h2>
+                <p class="text-sm text-gray-700 mb-2">Usa esta URL en dispositivos conectados a la misma red WiFi:</p>
+                <div id="network-url-display" class="bg-white p-3 rounded border-2 border-blue-300 mb-2">
+                    <code class="text-lg font-mono text-blue-600">Cargando...</code>
+                </div>
+                <button onclick="copyUrl('network')" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+                    📋 Copiar URL
+                </button>
+            </div>
+
+            <div id="public-url-section" class="bg-purple-50 p-4 rounded-lg hidden">
+                <h2 class="font-semibold mb-2">🌍 Acceso desde Internet:</h2>
+                <p class="text-sm text-gray-700 mb-2">Comparte esta URL para acceder desde fuera de tu red local:</p>
+                <div id="public-url-display" class="bg-white p-3 rounded border-2 border-purple-300 mb-2"></div>
+                <button onclick="copyUrl('public')" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700">
+                    📋 Copiar URL Pública
+                </button>
+            </div>
+
+            <div class="bg-yellow-50 p-4 rounded-lg">
+                <h2 class="font-semibold mb-2">⚠️ Si no funciona:</h2>
+                <ol class="text-sm space-y-1 list-decimal list-inside">
+                    <li>Asegúrate de que tu celular y la computadora que ejecuta el servidor estén en la <strong>misma red WiFi</strong>.</li>
+                    <li>Verifica que la URL de red local que aparece arriba sea accesible desde tu celular.</li>
+                    <li>Verifica que el firewall de Windows permita conexiones en el puerto 3000</li>
+                    <li>Reinicia el servidor</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let networkUrl = '';
+        let publicUrl = '';
+
+        // Obtener URL del servidor
+        fetch('/api/server-info')
+            .then(res => res.json())
+            .then(data => { // eslint-disable-line no-undef
+                networkUrl = data.networkUrl;
+                document.getElementById('network-url-display').innerHTML = `
+                    <code class="text-lg font-mono text-blue-600">${networkUrl}</code>
+                `;
+                
+                if (data.publicIP) {
+                    publicUrl = `http://${data.publicIP}:${data.port}`;
+                    document.getElementById('public-url-display').innerHTML = `
+                        <code class="text-lg font-mono text-purple-600">${publicUrl}</code>
+                    `;
+                    document.getElementById('public-url-section').classList.remove('hidden');
+                }
+
+                // Test de conexión
+                testConnection(networkUrl);
+            })
+            .catch(err => {
+                console.error('Error al obtener info del servidor:', err);
+                document.getElementById('status').innerHTML = `
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                        ❌ Error: No se pudo obtener información del servidor
+                    </div>
+                `;
+            });
+
+        function testConnection(url) {
+            fetch(url + '/api/myip', { cache: 'no-store', timeout: 5000 })
+                .then(res => {
+                    if (res.ok) {
+                        document.getElementById('status').innerHTML = `
+                            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                                ✅ Servidor respondiendo correctamente!
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('status').innerHTML = `
+                            <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+                                ⚠️ Servidor respondió pero con error
+                            </div>
+                        `;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('status').innerHTML = `
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                            ❌ El servidor no responde desde esta red. Posibles causas:
+                            <ul class="list-disc list-inside mt-2 text-sm">
+                                <li>Firewall bloqueando el puerto 3000</li>
+                                <li>IP incorrecta</li>
+                                <li>Servidor no está corriendo</li>
+                            </ul>
+                        </div>
+                    `;
+                });
+        }
+
+        function copyUrl(type) {
+            const urlToCopy = type === 'public' ? publicUrl : networkUrl;
+            const urlName = type === 'public' ? 'URL Pública' : 'URL de Red';
+
+            if (!urlToCopy) {
+                alert('Espera a que cargue la URL');
+                return;
+            }
+            navigator.clipboard.writeText(urlToCopy).then(() => {
+                alert(`✅ ${urlName} copiada!\n\nPégala en el navegador: ${urlToCopy}`);
+            });
+        }
+    </script>
+</body>
+</html>

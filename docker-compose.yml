@@ -1,0 +1,17 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: 25n-formulario
+    ports:
+      - "8080:80"  # Puerto local:puerto contenedor
+    restart: unless-stopped
+    # Opcional: montar el directorio para desarrollo en tiempo real
+    # Descomenta la siguiente línea si quieres cambios en tiempo real
+    # volumes:
+    #   - .:/usr/share/nginx/html:ro
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=80
+

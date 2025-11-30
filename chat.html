@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Anónimo - Red Local</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        #messages {
+            scroll-behavior: smooth;
+        }
+        .message-animation {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen py-4 px-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white rounded-t-lg shadow-lg p-4 mb-2">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">💬 Chat Anónimo</h1>
+                    <p class="text-sm text-gray-600">Red Local - Solo se muestra tu IP</p>
+                </div>
+                <div class="text-right">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-blue-100 px-4 py-2 rounded-lg">
+                            <span class="text-sm text-gray-600">Usuarios:</span>
+                            <span id="user-count" class="ml-2 text-lg font-bold text-blue-600">0</span>
+                        </div>
+                        <div class="bg-green-100 px-4 py-2 rounded-lg">
+                            <span class="text-sm text-gray-600">Tu IP:</span>
+                            <span id="my-ip" class="ml-2 font-mono text-sm font-bold text-green-600">-</span>
+                        </div>
+                    </div>
+                </div>
+    </div>
+  </div>
+
+        <div id="status-banner" class="hidden px-4 py-2 rounded-lg text-sm border mt-2"></div>
+
+        <!-- Encuesta Activa -->
+        <div id="poll-wrapper" class="mt-4">
+            <div id="poll-card" class="bg-white rounded-lg shadow-lg p-4 hidden">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-gray-400 font-semibold">Encuesta en curso</p>
+                        <h2 id="poll-question" class="text-xl font-bold text-gray-900 mt-1"></h2>
+                    </div>
+                    <div id="poll-meta" class="text-xs text-gray-500 text-right"></div>
+                </div>
+                <div id="poll-options" class="mt-4 space-y-3"></div>
+                <div id="poll-message" class="mt-4 text-sm font-medium hidden"></div>
+            </div>
+            <div id="poll-empty-state" class="bg-white rounded-lg shadow-lg p-4 text-center text-gray-500 hidden">
+                No hay una encuesta activa por ahora.
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="bg-white rounded-lg shadow-lg flex flex-col" style="height: calc(100vh - 180px);">
+            <!-- Messages Area -->
+            <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+
+            <!-- Input Area -->
+            <div class="border-t border-gray-200 p-4">
+                <form id="message-form" class="flex space-x-2">
+                    <input 
+                        type="text" 
+                        id="message-input" 
+                        placeholder="Escribe tu mensaje..." 
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        autocomplete="off">
+                    <button 
+                        type="submit" 
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition">
+                        Enviar
+                    </button>
+                </form>
+    </div>
+    </div>
+
+        <!-- Info Footer -->
+        <div class="bg-white rounded-b-lg shadow-lg p-2 mt-2">
+            <p class="text-xs text-center text-gray-500">
+                🔒 Anónimo: Solo se muestra tu IP | Haz clic en tu mensaje para eliminarlo
+            </p>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let socket; // Dejar el socket sin inicializar
+
+    const messagesDiv = document.getElementById('messages');
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+    const userCountSpan = document.getElementById('user-count');
+    const myIpSpan = document.getElementById('my-ip'); // Se reutilizará para el nombre de usuario
+    const statusBanner = document.getElementById('status-banner');
+    const pollCard = document.getElementById('poll-card');
+    const pollQuestionEl = document.getElementById('poll-question');
+    const pollOptionsEl = document.getElementById('poll-options');
+    const pollMetaEl = document.getElementById('poll-meta');
+    const pollMessageEl = document.getElementById('poll-message');
+    const pollEmptyState = document.getElementById('poll-empty-state');
+
+
+    const MESSAGE_MAX_LENGTH = 500;
+    const POLL_STORAGE_KEY = 'anon_chat_poll_state';
+    let activePoll = null;
+    let pendingVoteOption = null;
+    let statusTimeout = null;
+
+    hydratePollFromStorage();
+
+    // 1. VERIFICAR SESIÓN ANTES DE INICIAR CUALQUIER OTRA COSA
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const response = await fetch('/api/session');
+        const data = await response.json();
+
+        if (data.isAuthenticated && data.user) {
+          currentUser = data.user;
+          // Autenticación exitosa, ahora podemos iniciar la app
+          initializeApp();
+        } else {
+          // Si no hay sesión, redirigir al login
+          window.location.href = '/index.html';
+        }
+      } catch (error) {
+        console.error('Error de autenticación:', error);
+        showStatus('Error de autenticación. Redirigiendo al login...', 'error', true);
+        setTimeout(() => window.location.href = '/index.html', 2000);
+      }
+    });
+
+    function initializeApp() {
+      console.log(`Bienvenido, ${currentUser.username}`);
+      updateUserInfo();
+
+      // 2. CONECTAR EL SOCKET SOLO DESPUÉS DE VERIFICAR LA SESIÓN
+      socket = io({
+        // Opciones de conexión si fueran necesarias
+      });
+
+      setupSocketListeners();
+      
+      messageInput.setAttribute('maxlength', MESSAGE_MAX_LENGTH);
+      messageInput.focus();
+    }
+    
+    function updateUserInfo() {
+        const userInfoContainer = myIpSpan.parentElement;
+        userInfoContainer.innerHTML = `
+            <span class="text-sm text-gray-600">Usuario:</span>
+            <span id="my-username" class="ml-2 font-mono text-sm font-bold text-green-600">${currentUser.username}</span>
+            <button onclick="logout()" class="ml-4 text-xs text-red-500 hover:underline">(Salir)</button>
+        `;
+    }
+
+    async function logout() {
+        try {
+            await fetch('/api/logout', { method: 'POST' });
+        } catch (e) {
+            console.error("Error during logout, clearing session locally.", e);
+        } finally {
+            sessionStorage.clear();
+            window.location.href = '/index.html';
+        }
+    }
+
+    function setupSocketListeners() {
+        // Socket.IO - Recibir historial
+        socket.on('history', (messages) => {
+            messagesDiv.innerHTML = '';
+            messages.forEach(msg => {
+                const normalizedMsg = {
+                    id: msg.id,
+                    userId: msg.userId || msg.user_id,
+                    username: msg.username,
+                    message: msg.message,
+                    createdAt: msg.created_at || msg.createdAt
+                };
+                addMessageToUI(normalizedMsg);
+            });
+            scrollToBottom();
+        });
+
+        // Socket.IO - Recibir nuevo mensaje
+        socket.on('message', (msg) => {
+            addMessageToUI(msg);
+            scrollToBottom();
+        });
+
+        socket.on('message_error', (payload) => {
+            showStatus(payload?.message || 'No se pudo enviar el mensaje.', 'error', true);
+        });
+        
+        socket.on('auth_error', (payload) => {
+            showStatus(payload.message + ' Redirigiendo a login...', 'error', true);
+            setTimeout(() => window.location.href = '/index.html', 3000);
+        });
+
+        socket.on('connect', () => {
+            showStatus('Conectado con el servidor.', 'success');
+        });
+
+        socket.on('disconnect', () => {
+            showStatus('Conexión perdida. Reintentando...', 'info', true);
+        });
+
+        socket.on('connect_error', (err) => {
+            showStatus('No se pudo establecer la conexión con el servidor.', 'error', true);
+            console.error('Connection Error:', err);
+        });
+
+        socket.io.on('reconnect', () => {
+            showStatus('Conexión restablecida.', 'success');
+        });
+
+        socket.io.on('reconnect_attempt', () => {
+            showStatus('Intentando reconectar...', 'info', true);
+        });
+
+        // Socket.IO - Mensaje eliminado
+        socket.on('message_deleted', (data) => {
+            const messageElement = document.getElementById(`message-${data.messageId}`);
+            if (messageElement) {
+                messageElement.remove();
+            }
+        });
+
+        // Socket.IO - Actualización de contador de usuarios
+        socket.on('user_count_update', (data) => {
+            userCountSpan.textContent = data.count;
+        });
+
+        socket.on('poll_update', onPollUpdate);
+        socket.on('poll_clear', onPollClear);
+        socket.on('poll_error', onPollError);
+    }
+
+    // Lógica de encuestas
+    function onPollUpdate(poll) {
+        if (!poll) {
+            onPollClear();
+            return;
+        }
+        const storedVote = getStoredVoteForPoll(poll.id);
+        const voteToPersist = storedVote || pendingVoteOption || null;
+        renderPoll(poll, voteToPersist);
+        if (voteToPersist) {
+            setPollMessage(`Ya votaste por "${voteToPersist}".`, 'success');
+        } else {
+            setPollMessage('Participa con tu voto para apoyar una opción.', 'info');
+        }
+        pendingVoteOption = null;
+    }
+
+    function onPollClear(message) {
+        activePoll = null;
+        pendingVoteOption = null;
+        clearPollState();
+        showPollEmptyState(message || 'No hay una encuesta activa por ahora.');
+    }
+
+    function onPollError(payload = {}) {
+        pendingVoteOption = null;
+        const msg = payload.message || 'No se pudo registrar tu voto.';
+        showStatus(msg, 'error', true);
+        setPollMessage(msg, 'error');
+    }
+
+    function handleVote(option) {
+        if (!socket || !socket.connected) {
+            showStatus('No hay conexión con el servidor para registrar tu voto.', 'error', true);
+            return;
+        }
+        const poll = activePoll || getStoredPollState()?.poll;
+        if (!poll) {
+            showStatus('No hay una encuesta activa.', 'error');
+            return;
+        }
+        const alreadyVoted = getStoredVoteForPoll(poll.id);
+        if (alreadyVoted) {
+            setPollMessage(`Ya votaste por "${alreadyVoted}".`, 'info');
+            return;
+        }
+        pendingVoteOption = option;
+        socket.emit('submit_vote', option);
+        setPollMessage(`Enviando tu voto por "${option}"...`, 'info');
+    }
+
+    function renderPoll(poll, selectedOption = null, fromStorage = false) {
+        if (!poll || !poll.options || Object.keys(poll.options).length === 0) {
+            showPollEmptyState();
+            return;
+        }
+
+        if (!fromStorage) {
+            activePoll = poll;
+        }
+
+        if (pollEmptyState) {
+            pollEmptyState.classList.add('hidden');
+        }
+        if (pollCard) {
+            pollCard.classList.remove('hidden');
+        }
+
+        if (pollQuestionEl) {
+            pollQuestionEl.textContent = poll.question || 'Encuesta activa';
+        }
+
+        const totalVotes = Object.values(poll.options).reduce((sum, value) => sum + Number(value || 0), 0);
+        if (pollMetaEl) {
+            pollMetaEl.textContent = `${totalVotes === 1 ? '1 voto' : `${totalVotes} votos`} registrados${poll.createdAt ? ` • ${formatPollDate(poll.createdAt)}` : ''}`;
+        }
+
+        pollOptionsEl.innerHTML = '';
+        Object.entries(poll.options).forEach(([optionText, amount]) => {
+            const percent = calculatePercent(amount, totalVotes);
+            const button = document.createElement('button');
+            button.type = 'button';
+            const isSelected = selectedOption === optionText;
+            button.className = `w-full text-left border rounded-lg p-3 transition ${
+                isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-gray-50 hover:border-blue-400 hover:bg-white'
+            } ${selectedOption ? 'cursor-not-allowed' : ''}`;
+            button.disabled = Boolean(selectedOption);
+            button.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-gray-800">${escapeHtml(optionText)}</span>
+                    <span class="text-sm text-gray-600">${amount} votos (${percent}%)</span>
+                </div>
+                <div class="h-2 bg-gray-200 rounded-full mt-2 overflow-hidden">
+                    <div class="h-full ${isSelected ? 'bg-blue-500' : 'bg-gray-400'}" style="width: ${percent}%;"></div>
+                </div>
+            `;
+            if (!selectedOption) {
+                button.addEventListener('click', () => handleVote(optionText));
+            }
+            pollOptionsEl.appendChild(button);
+        });
+
+        persistPollState(poll, selectedOption);
+    }
+
+    function calculatePercent(count, total) {
+        if (!total) return 0;
+        return Math.round((Number(count || 0) / total) * 100);
+    }
+
+    function setPollMessage(message, type = 'info') {
+        if (!pollMessageEl) return;
+        const variants = {
+            error: 'text-red-600',
+            info: 'text-gray-600',
+            success: 'text-green-600'
+        };
+        const classes = variants[type] || variants.info;
+        if (!message) {
+            pollMessageEl.classList.add('hidden');
+            return;
+        }
+        pollMessageEl.className = `mt-4 text-sm font-medium ${classes}`;
+        pollMessageEl.textContent = message;
+        pollMessageEl.classList.remove('hidden');
+    }
+
+    function showPollEmptyState(message = 'No hay una encuesta activa por ahora.') {
+        if (pollCard) {
+            pollCard.classList.add('hidden');
+        }
+        if (pollOptionsEl) {
+            pollOptionsEl.innerHTML = '';
+        }
+        if (pollEmptyState) {
+            pollEmptyState.classList.remove('hidden');
+            pollEmptyState.textContent = message;
+        }
+        if (pollMessageEl) {
+            pollMessageEl.classList.add('hidden');
+        }
+    }
+
+    function getStoredPollState() {
+        try {
+            const raw = localStorage.getItem(POLL_STORAGE_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (!parsed || !parsed.poll || !parsed.poll.options) {
+                return null;
+            }
+            return parsed;
+        } catch (error) {
+            console.warn('No se pudo cargar la encuesta guardada.', error);
+            return null;
+        }
+    }
+
+    function getStoredVoteForPoll(pollId) {
+        const stored = getStoredPollState();
+        if (stored?.poll?.id === pollId) {
+            return stored.myVote || null;
+        }
+        return null;
+    }
+
+    function persistPollState(poll, myVote = null) {
+        if (!poll) return;
+        const sanitizedOptions = Object.entries(poll.options || {}).reduce((acc, [option, count]) => {
+            acc[option] = count;
+            return acc;
+        }, {});
+        const sanitizedPoll = {
+            id: poll.id || `local-${Date.now()}`,
+            question: poll.question,
+            options: sanitizedOptions,
+            createdAt: poll.createdAt || new Date().toISOString()
+        };
+        localStorage.setItem(POLL_STORAGE_KEY, JSON.stringify({
+            poll: sanitizedPoll,
+            myVote: myVote || null,
+            updatedAt: Date.now()
+        }));
+    }
+
+    function clearPollState() {
+        localStorage.removeItem(POLL_STORAGE_KEY);
+    }
+
+    function hydratePollFromStorage() {
+        const stored = getStoredPollState();
+        if (stored?.poll) {
+            renderPoll(stored.poll, stored.myVote, true);
+            if (stored.myVote) {
+                setPollMessage(`Ya votaste por "${stored.myVote}".`, 'success');
+            } else {
+                setPollMessage('Mostrando los últimos resultados guardados.', 'info');
+            }
+        } else {
+            showPollEmptyState();
+        }
+    }
+
+    function formatPollDate(value) {
+        if (!value) return '';
+        const date = new Date(value);
+        return date.toLocaleString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // Agregar mensaje a la UI
+    function addMessageToUI(msg) {
+        if (document.getElementById(`message-${msg.id}`)) return;
+
+        const isMyMessage = msg.userId === currentUser.id;
+
+        const messageDiv = document.createElement('div');
+        messageDiv.id = `message-${msg.id}`;
+        messageDiv.className = `message-animation p-3 rounded-lg ${
+            isMyMessage 
+                ? 'bg-blue-50 border border-blue-200 ml-auto max-w-md' 
+                : 'bg-gray-50 border border-gray-200 max-w-md'
+        }`;
+
+        messageDiv.innerHTML = `
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-2 mb-1">
+                        <span class="text-sm font-semibold ${isMyMessage ? 'text-blue-700' : 'text-gray-700'}">
+                            ${escapeHtml(msg.username)}
+                        </span>
+                        <span class="text-xs text-gray-400">
+                            ${new Date(msg.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                    </div>
+                    <p class="text-gray-800 break-words">${escapeHtml(msg.message)}</p>
+                </div>
+                ${isMyMessage ? `
+                    <button 
+                        onclick="deleteMessage(${msg.id})" 
+                        class="ml-2 text-red-500 hover:text-red-700 text-sm opacity-50 hover:opacity-100"
+                        title="Eliminar mensaje">
+                        🗑️
+                    </button>
+                ` : ''}
+            </div>
+        `;
+
+        messagesDiv.appendChild(messageDiv);
+    }
+
+    // Eliminar mensaje
+    async function deleteMessage(messageId) {
+        if (!confirm('¿Estás seguro de que quieres eliminar este mensaje?')) return;
+
+        try {
+            const response = await fetch(`/api/messages/${messageId}`, { method: 'DELETE' });
+            const data = await response.json();
+            if (!response.ok) {
+                alert(data.error || 'Error al eliminar mensaje');
+            }
+            // El evento 'message_deleted' del socket se encargará de removerlo de la UI
+        } catch (error) {
+            console.error('Error al eliminar mensaje:', error);
+            alert('Error de conexión al eliminar mensaje');
+        }
+    }
+
+    // Enviar mensaje
+    messageForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const message = messageInput.value.trim();
+
+        if (!socket || !socket.connected) {
+            showStatus('No hay conexión con el servidor.', 'error', true);
+            return;
+        }
+
+        if (message.length === 0) {
+            showStatus('Escribe un mensaje antes de enviarlo.', 'error');
+            return;
+        }
+
+        if (message.length > MESSAGE_MAX_LENGTH) {
+            showStatus(`El mensaje supera el máximo de ${MESSAGE_MAX_LENGTH} caracteres.`, 'error');
+            return;
+        }
+
+        socket.emit('new_message', { message });
+        messageInput.value = '';
+        messageInput.focus();
+    });
+
+    // Utils
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function scrollToBottom() {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function showStatus(message, type = 'info', persist = false) {
+        if (!statusBanner) return;
+        const variants = {
+            error: 'bg-red-50 border-red-200 text-red-700',
+            info: 'bg-blue-50 border-blue-200 text-blue-700',
+            success: 'bg-green-50 border-green-200 text-green-700'
+        };
+        const classes = variants[type] || variants.info;
+        statusBanner.className = `px-4 py-2 rounded-lg text-sm border mt-2 ${classes}`;
+        statusBanner.textContent = message;
+        statusBanner.classList.remove('hidden');
+
+        clearTimeout(statusTimeout);
+        if (!persist) {
+            statusTimeout = setTimeout(() => {
+                statusBanner.classList.add('hidden');
+            }, 5000);
+        }
+    }
+
+    // Hacer funciones globales para que sean accesibles desde el HTML
+    window.deleteMessage = deleteMessage;
+    window.logout = logout;
+  </script>
+</body>
+</html>

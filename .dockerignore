@@ -1,0 +1,25 @@
+# Archivos que no necesitamos en el contenedor
+.git
+.gitignore
+README.md
+*.md
+*.txt
+*.gs
+
+# Archivos de desarrollo
+.vscode
+.idea
+*.log
+*.swp
+*.swo
+*~
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Docker files (no necesarios dentro del contenedor)
+Dockerfile
+docker-compose.yml
+.dockerignore
+

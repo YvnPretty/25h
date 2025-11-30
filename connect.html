@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conectar desde Celular - Chat Anónimo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .ip-box {
+            font-size: 2rem;
+            letter-spacing: 2px;
+            word-break: break-all;
+        }
+        @media (max-width: 640px) {
+            .ip-box {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen py-8 px-4">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">
+                    📱 Conectar desde Celular
+                </h1>
+                <p class="text-gray-600">Abre esta URL en tu navegador móvil:</p>
+            </div>
+
+            <!-- IP Principal -->
+            <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 mb-6 shadow-lg">
+                <p class="text-white text-sm font-medium mb-2">URL para Celular:</p>
+                <div class="bg-white rounded-lg p-4">
+                    <code id="main-url" class="ip-box font-mono font-bold text-blue-600">
+                        Cargando...
+                    </code>
+                </div>
+                <button 
+                    onclick="copyMainUrl()" 
+                    class="mt-4 w-full bg-white text-blue-600 font-semibold py-3 rounded-lg hover:bg-gray-100 transition shadow-md">
+                    📋 Copiar URL
+                </button>
+            </div>
+
+            <!-- Instrucciones -->
+            <div class="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6 mb-6">
+                <h2 class="text-lg font-bold text-yellow-900 mb-3">📝 Pasos para Conectar:</h2>
+                <ol class="space-y-2 text-yellow-800">
+                    <li class="flex items-start">
+                        <span class="font-bold mr-2">1.</span>
+                        <span>Asegúrate de que tu celular esté conectado a la <strong>misma red WiFi</strong> que tu computadora</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="font-bold mr-2">2.</span>
+                        <span>Abre el navegador en tu celular (Chrome, Safari, etc.)</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="font-bold mr-2">3.</span>
+                        <span>Escribe en la barra de direcciones la URL que aparece arriba</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="font-bold mr-2">4.</span>
+                        <span>Presiona "Ir" o "Enter"</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="font-bold mr-2">5.</span>
+                        <span>¡Listo! Ya puedes registrarte y chatear</span>
+                    </li>
+                </ol>
+            </div>
+
+            <!-- Otras IPs -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <p class="text-sm font-semibold text-gray-700 mb-3">🔍 Otras IPs disponibles:</p>
+                <div id="other-ips" class="space-y-2">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+            </div>
+
+            <!-- Verificación -->
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center mb-2">
+                    <span class="text-2xl mr-2">✅</span>
+                    <span class="font-semibold text-green-800">Servidor Activo</span>
+                </div>
+                <p class="text-sm text-green-700">
+                    El servidor está corriendo y listo para recibir conexiones
+                </p>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a href="/" class="flex-1 text-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+                    ← Volver al Inicio
+                </a>
+                <button 
+                    onclick="location.reload()" 
+                    class="flex-1 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-semibold">
+                    🔄 Actualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Código QR (opcional, se puede agregar después) -->
+        <div class="mt-6 text-center text-white">
+            <p class="text-sm opacity-90">
+                💡 Si no funciona, verifica que tu celular esté en la misma WiFi
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Obtener información del servidor
+        fetch('/api/server-info')
+            .then(res => res.json())
+            .then(data => {
+                // Mostrar URL principal
+                const mainUrl = data.networkUrl;
+                document.getElementById('main-url').textContent = mainUrl;
+                window.mainUrl = mainUrl;
+
+                // Obtener todas las IPs posibles
+                fetch('/api/myip')
+                    .then(res => res.json())
+                    .then(ipData => {
+                        const clientIP = ipData.ip;
+                        const otherIpsDiv = document.getElementById('other-ips');
+                        
+                        // Si hay múltiples IPs, mostrar alternativas
+                        const allIPs = [
+                            { ip: data.localIP, label: 'IP Local Detectada', url: data.networkUrl },
+                            { ip: clientIP, label: 'Tu IP Actual', url: `http://${clientIP}:${data.port}` }
+                        ];
+
+                        // Filtrar IPs duplicadas
+                        const uniqueIPs = [];
+                        const seen = new Set();
+                        allIPs.forEach(item => {
+                            if (!seen.has(item.ip) && item.ip !== '127.0.0.1' && item.ip !== 'localhost') {
+                                seen.add(item.ip);
+                                uniqueIPs.push(item);
+                            }
+                        });
+
+                        // Mostrar otras IPs si hay alternativas
+                        if (uniqueIPs.length > 1) {
+                            uniqueIPs.forEach(item => {
+                                if (item.ip !== data.localIP) {
+                                    const div = document.createElement('div');
+                                    div.className = 'bg-white rounded p-3 border border-gray-200';
+                                    div.innerHTML = `
+                                        <p class="text-xs text-gray-600 mb-1">${item.label}:</p>
+                                        <code class="text-sm font-mono text-blue-600 font-semibold">${item.url}</code>
+                                    `;
+                                    otherIpsDiv.appendChild(div);
+                                }
+                            });
+                        } else {
+                            otherIpsDiv.innerHTML = '<p class="text-sm text-gray-600">No hay otras IPs disponibles</p>';
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error al obtener IP:', err);
+                    });
+            })
+            .catch(err => {
+                console.error('Error al obtener info del servidor:', err);
+                document.getElementById('main-url').textContent = 'Error al cargar. Verifica que el servidor esté corriendo.';
+            });
+
+        // Copiar URL principal
+        function copyMainUrl() {
+            if (!window.mainUrl) {
+                alert('Espera a que cargue la URL');
+                return;
+            }
+
+            navigator.clipboard.writeText(window.mainUrl).then(() => {
+                alert('✅ URL copiada al portapapeles!\n\nPégala en el navegador de tu celular.');
+            }).catch(err => {
+                // Fallback para navegadores que no soportan clipboard API
+                const textarea = document.createElement('textarea');
+                textarea.value = window.mainUrl;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ URL copiada!\n\nPégala en el navegador de tu celular.');
+            });
+        }
+    </script>
+</body>
+</html>
+

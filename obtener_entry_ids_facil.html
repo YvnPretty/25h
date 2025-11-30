@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obtener Entry IDs - Formulario 25N</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+        }
+        .step {
+            background: #f8fafc;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-xl p-8">
+        <h1 class="text-4xl font-bold mb-6 text-gray-800">🔑 Obtener Entry IDs del Formulario</h1>
+        
+        <div class="mb-8 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+            <p class="text-yellow-800 font-semibold">⚠️ IMPORTANTE: Necesitas abrir el formulario en <strong>MODO EDICIÓN</strong>, no en vista previa (iframe).</p>
+        </div>
+
+        <div class="step">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Paso 1: Abre el Formulario en Modo Edición</h2>
+            <p class="mb-4 text-gray-700">Haz clic en este enlace para abrir tu formulario en modo edición:</p>
+            <a href="https://docs.google.com/forms/d/1FAIpQLSdYK9Vde8Faed_4BF5H7aeECn-zrJr8wlubfdpZlHn1c0-wbg/edit" 
+               target="_blank" 
+               class="btn-primary inline-block mb-4">
+                🔗 Abrir Formulario en Modo Edición
+            </a>
+            <p class="text-sm text-gray-600">La URL debe terminar en <code class="bg-gray-200 px-2 py-1 rounded">/edit</code>, NO en <code class="bg-gray-200 px-2 py-1 rounded">/viewform</code></p>
+        </div>
+
+        <div class="step">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Paso 2: Abre la Consola del Navegador</h2>
+            <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                <li>Presiona <strong>F12</strong> en tu teclado</li>
+                <li>O haz clic derecho → "Inspeccionar" → pestaña "Console"</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Paso 3: Copia y Ejecuta el Script</h2>
+            <p class="mb-4 text-gray-700">Copia el siguiente script y pégalo en la consola:</p>
+            
+            <div class="code-block" id="scriptCode">(function() {
+    console.clear();
+    console.log('%c🔍 Buscando Entry IDs...', 'color: blue; font-size: 16px; font-weight: bold;');
+    
+    const form = document.querySelector('form');
+    if (!form) {
+        console.error('%c❌ No se encontró el formulario. Asegúrate de estar en MODO EDICIÓN.', 'color: red;');
+        return;
+    }
+    
+    const allInputs = document.querySelectorAll('input[name^="entry."]');
+    const uniqueEntryIds = new Set();
+    
+    allInputs.forEach(input => {
+        if (input.name && input.name.startsWith('entry.')) {
+            uniqueEntryIds.add(input.name);
+        }
+    });
+    
+    if (uniqueEntryIds.size === 0) {
+        console.error('%c❌ No se encontraron Entry IDs.', 'color: red;');
+        return;
+    }
+    
+    const entryIdsArray = Array.from(uniqueEntryIds).slice(0, 10);
+    const config = {};
+    entryIdsArray.forEach((entryId, index) => {
+        config[`q${index + 1}`] = entryId;
+    });
+    
+    const configString = `const GOOGLE_FORM_CONFIG = {
+    enabled: true,
+    formId: '1FAIpQLSdYK9Vde8Faed_4BF5H7aeECn-zrJr8wlubfdpZlHn1c0-wbg',
+    entryIds: {
+        q1: '${config.q1 || 'entry.XXXXX'}',
+        q2: '${config.q2 || 'entry.XXXXX'}',
+        q3: '${config.q3 || 'entry.XXXXX'}',
+        q4: '${config.q4 || 'entry.XXXXX'}',
+        q5: '${config.q5 || 'entry.XXXXX'}',
+        q6: '${config.q6 || 'entry.XXXXX'}',
+        q7: '${config.q7 || 'entry.XXXXX'}',
+        q8: '${config.q8 || 'entry.XXXXX'}',
+        q9: '${config.q9 || 'entry.XXXXX'}',
+        q10: '${config.q10 || 'entry.XXXXX'}'
+    }
+};`;
+    
+    console.log('%c✅ CONFIGURACIÓN COMPLETA:', 'color: green; font-size: 14px; font-weight: bold;');
+    console.log(configString);
+    console.log('%c📋 Copia la configuración de arriba y pégala en 25.html', 'color: blue; font-weight: bold;');
+    
+    return config;
+})();</div>
+            
+            <button onclick="copiarScript()" class="btn-primary mt-4">
+                📋 Copiar Script al Portapapeles
+            </button>
+        </div>
+
+        <div class="step">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Paso 4: Actualiza 25.html</h2>
+            <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                <li>Abre el archivo <code class="bg-gray-200 px-2 py-1 rounded">25.html</code></li>
+                <li>Busca <code class="bg-gray-200 px-2 py-1 rounded">GOOGLE_FORM_CONFIG</code> (línea ~583)</li>
+                <li>Reemplaza toda la sección con la configuración que copiaste de la consola</li>
+                <li>Guarda el archivo</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Paso 5: Reconstruye el Contenedor</h2>
+            <p class="mb-2 text-gray-700">Ejecuta en la terminal:</p>
+            <div class="code-block">docker-compose up -d --build</div>
+        </div>
+
+        <div class="mt-8 p-4 bg-green-50 border-l-4 border-green-400 rounded">
+            <h3 class="font-bold text-green-800 mb-2">✅ ¡Listo!</h3>
+            <p class="text-green-700">Una vez completados estos pasos, tu formulario guardará las respuestas automáticamente en Google Forms.</p>
+        </div>
+    </div>
+
+    <script>
+        function copiarScript() {
+            const code = document.getElementById('scriptCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('✅ Script copiado al portapapeles!\n\nAhora:\n1. Abre el formulario en modo edición\n2. Abre la consola (F12)\n3. Pega el script y presiona Enter');
+            }).catch(() => {
+                alert('Error al copiar. Por favor, selecciona y copia manualmente el script.');
+            });
+        }
+    </script>
+</body>
+</html>
+

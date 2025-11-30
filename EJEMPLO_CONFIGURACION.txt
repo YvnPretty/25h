@@ -1,0 +1,35 @@
+EJEMPLO DE CONFIGURACIÓN PARA 25.HTML
+=====================================
+
+Después de ejecutar el script de Google Apps Script, copia y pega esto
+en el archivo 25.html, reemplazando la sección GOOGLE_FORM_CONFIG:
+
+const GOOGLE_FORM_CONFIG = {
+    enabled: true,
+    formId: '1FAIpQLSdXXXXXXXXX',  // ← Reemplaza con tu Form ID real
+    entryIds: {
+        q1: 'entry.123456789',     // ← Reemplaza con tus Entry IDs reales
+        q2: 'entry.987654321',
+        q3: 'entry.111111111',
+        q4: 'entry.222222222',
+        q5: 'entry.333333333',
+        q6: 'entry.444444444',
+        q7: 'entry.555555555',
+        q8: 'entry.666666666',
+        q9: 'entry.777777777',
+        q10: 'entry.888888888'
+    }
+};
+
+INSTRUCCIONES RÁPIDAS:
+=====================
+
+1. Ejecuta el script crear_formulario_google.gs en Google Apps Script
+2. Copia la configuración que aparece en el log
+3. Abre 25.html y busca "GOOGLE_FORM_CONFIG"
+4. Reemplaza toda la sección con la configuración copiada
+5. Cambia enabled: false a enabled: true
+6. Guarda el archivo
+
+¡Listo! El formulario ahora guardará las respuestas en Google Forms.
+

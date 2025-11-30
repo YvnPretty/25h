@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Chat Anónimo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            background-color: #f0f2f5;
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="min-h-screen py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">🔐 Panel de Administración</h1>
+            <p class="text-gray-600">Chat Anónimo - Red Local</p>
+        </div>
+
+        <!-- Estadísticas Generales -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 rounded-full">
+                        <span class="text-2xl">👥</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Total Usuarios</p>
+                        <p id="stat-total-users" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 rounded-full">
+                        <span class="text-2xl">💬</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Total Mensajes</p>
+                        <p id="stat-total-messages" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-yellow-100 rounded-full">
+                        <span class="text-2xl">🟢</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Conexiones Activas</p>
+                        <p id="stat-active-connections" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-100 rounded-full">
+                        <span class="text-2xl">📍</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">IPs Únicas Activas</p>
+                        <p id="stat-unique-ips" class="text-2xl font-bold text-gray-900">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clave de Red -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">🔑 Network Key</h2>
+                    <p class="text-sm text-gray-600 mb-3">Comparte esta clave para que otros puedan registrarse.</p>
+                    <div class="bg-gray-100 border border-gray-300 rounded-lg px-4 py-2">
+                        <code id="network-key" class="text-2xl font-mono text-purple-700">Cargando...</code>
+                    </div>
+                </div>
+                <button onclick="copyNetworkKey()" class="ml-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    Copiar Clave
+                </button>
+            </div>
+        </div>
+
+        <!-- Cambiar Clave de Red -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-2">🔄 Cambiar Network Key</h2>
+            <p class="text-sm text-gray-600 mb-3">Introduce una nueva clave para el registro de usuarios.</p>
+            <form id="change-key-form" class="flex items-center gap-4">
+                <input 
+                    type="text" 
+                    id="new-network-key"
+                    class="flex-grow px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Nueva Network Key"
+                    required
+                >
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Guardar Nueva Clave
+                </button>
+            </form>
+            <div id="change-key-status" class="mt-3 text-sm"></div>
+        </div>
+
+        <!-- IPs Activas -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">📍 IPs Activas Conectadas</h2>
+            <div id="active-ips-list" class="flex flex-wrap gap-2">
+                <p class="text-gray-500">Cargando...</p>
+            </div>
+        </div>
+
+        <!-- Gestión de Encuestas -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">📊 Gestión de Encuestas</h2>
+            <div id="poll-status" class="mb-4">Cargando estado de la encuesta...</div>
+            
+            <!-- Formulario para crear encuesta -->
+            <form id="create-poll-form" class="mb-4">
+                <div class="mb-3">
+                    <label for="poll-question" class="block text-sm font-medium text-gray-700">Pregunta de la Encuesta</label>
+                    <input type="text" id="poll-question" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                </div>
+                <div id="poll-options-container">
+                    <label class="block text-sm font-medium text-gray-700">Opciones</label>
+                    <input type="text" name="poll-option" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Opción 1" required>
+                    <input type="text" name="poll-option" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Opción 2" required>
+                </div>
+                <div class="mt-2">
+                    <button type="button" id="add-option-btn" class="text-sm text-blue-600 hover:text-blue-800">+ Añadir otra opción</button>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Crear Encuesta</button>
+                    <button type="button" id="reset-poll-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 ml-2">Resetear Encuesta</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Usuarios Registrados -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">👥 Usuarios Registrados</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registrado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="4" class="px-4 py-4 text-center text-gray-500">Cargando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mensajes Recientes -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">💬 Mensajes Recientes</h2>
+                <div id="recent-messages" class="space-y-3 max-h-96 overflow-y-auto">
+                    <p class="text-gray-500">Cargando...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botón de Actualizar -->
+        <div class="mt-6 text-center">
+            <button 
+                onclick="loadAllData()" 
+                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition">
+                🔄 Actualizar Datos
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let adminSocket = null;
+        const pollStatusElement = document.getElementById('poll-status');
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const isAdmin = await ensureAdminSession();
+            if (!isAdmin) return;
+            setupPollForm();
+            connectAdminSocket();
+            await loadAllData();
+            setInterval(loadAllData, 10000);
+        });
+
+        // Cargar todos los datos
+        async function loadAllData() {
+            await Promise.all([
+                loadStats(),
+                loadActiveIPs(),
+                loadUsers(),
+                loadMessages()
+            ]);
+        }
+
+        // Cargar estadísticas
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/admin/stats');
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        alert('Acceso denegado. Solo accesible desde localhost.');
+                        window.location.href = '/403.html';
+                        return;
+                    }
+                    throw new Error('Error al cargar estadísticas');
+                }
+                const data = await response.json();
+                
+                document.getElementById('stat-total-users').textContent = data.totalUsers;
+                document.getElementById('stat-total-messages').textContent = data.totalMessages;
+                document.getElementById('stat-active-connections').textContent = data.activeConnections;
+                document.getElementById('stat-unique-ips').textContent = data.uniqueActiveIPs;
+                document.getElementById('network-key').textContent = data.networkKey || 'No definida';
+            } catch (error) {
+                console.error('Error al cargar estadísticas:', error);
+            }
+        }
+
+        // Cargar IPs activas
+        async function loadActiveIPs() {
+            try {
+                const response = await fetch('/api/admin/active-ips');
+                if (!response.ok) {
+                    throw new Error('Error al cargar IPs activas');
+                }
+                const data = await response.json();
+                
+                const container = document.getElementById('active-ips-list');
+                if (data.activeIPs.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500">No hay IPs activas</p>';
+                } else {
+                    container.innerHTML = data.activeIPs.map(ip => `
+                        <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-mono">
+                            📍 ${ip}
+                        </span>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error al cargar IPs activas:', error);
+            }
+        }
+
+        // Cargar usuarios
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/users');
+                if (!response.ok) {
+                    throw new Error('Error al cargar usuarios');
+                }
+                const users = await response.json();
+                
+                const tbody = document.getElementById('users-table-body');
+                if (users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">No hay usuarios registrados</td></tr>';
+                } else {
+                    tbody.innerHTML = users.map(user => `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${user.id}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${escapeHtml(user.username)}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 font-mono">${user.ip_address || 'N/A'}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${formatDate(user.registered_at)}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error al cargar usuarios:', error);
+            }
+        }
+
+        // Cargar mensajes
+        async function loadMessages() {
+            try {
+                const response = await fetch('/api/messages?limit=20');
+                if (!response.ok) {
+                    throw new Error('Error al cargar mensajes');
+                }
+                const messages = await response.json();
+                
+                const container = document.getElementById('recent-messages');
+                if (messages.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500">No hay mensajes</p>';
+                } else {
+                    container.innerHTML = messages.slice(-20).reverse().map(msg => `
+                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-xs font-mono font-semibold text-gray-600">📍 ${msg.ip_address}</span>
+                                <span class="text-xs text-gray-400">${formatDate(msg.created_at)}</span>
+                            </div>
+                            <p class="text-sm text-gray-800">${escapeHtml(msg.message)}</p>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error al cargar mensajes:', error);
+            }
+        }
+
+        // Funciones auxiliares
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function copyNetworkKey() {
+            const key = document.getElementById('network-key').textContent;
+            if (key && key !== 'Cargando...') {
+                navigator.clipboard.writeText(key).then(() => {
+                    alert('Network Key copiada al portapapeles.');
+                });
+            }
+        }
+
+        async function ensureAdminSession() {
+            try {
+                const response = await fetch('/api/session');
+                const data = await response.json();
+                if (!data.isAuthenticated || !data.user?.is_admin) {
+                    alert('Acceso restringido. Debes iniciar sesión como administrador.');
+                    window.location.href = '/index.html';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                alert('No se pudo verificar la sesión. Por favor inicia sesión nuevamente.');
+                window.location.href = '/index.html';
+                return false;
+            }
+        }
+
+        function setupPollForm() {
+            const pollForm = document.getElementById('create-poll-form');
+            const addOptionBtn = document.getElementById('add-option-btn');
+            const pollOptionsContainer = document.getElementById('poll-options-container');
+            const resetPollBtn = document.getElementById('reset-poll-btn');
+
+            if (addOptionBtn && pollOptionsContainer) {
+                addOptionBtn.addEventListener('click', () => {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.name = 'poll-option';
+                    input.className = 'mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm';
+                    input.placeholder = `Opción ${pollOptionsContainer.querySelectorAll('input').length + 1}`;
+                    input.required = false;
+                    pollOptionsContainer.appendChild(input);
+                });
+            }
+
+            if (pollForm && pollOptionsContainer) {
+                pollForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    if (!adminSocket || !adminSocket.connected) {
+                        updatePollStatus('<p class="text-sm">Sin conexión con el servidor. Intenta nuevamente.</p>', 'error');
+                        return;
+                    }
+                    const question = document.getElementById('poll-question').value.trim();
+                    const options = Array.from(pollOptionsContainer.querySelectorAll('input[name="poll-option"]'))
+                        .map(input => input.value.trim())
+                        .filter(Boolean);
+
+                    if (!question) {
+                        updatePollStatus('<p class="text-sm">Escribe una pregunta para la encuesta.</p>', 'error');
+                        return;
+                    }
+
+                    if (options.length < 2) {
+                        updatePollStatus('<p class="text-sm">Agrega al menos dos opciones válidas.</p>', 'error');
+                        return;
+                    }
+
+                    adminSocket.emit('create_poll', { question, options });
+                    updatePollStatus('<p class="text-sm text-blue-700">Creando encuesta...</p>', 'info');
+                    pollForm.reset();
+                });
+            }
+
+            if (resetPollBtn) {
+                resetPollBtn.addEventListener('click', () => {
+                    if (!adminSocket || !adminSocket.connected) {
+                        updatePollStatus('<p class="text-sm">Sin conexión con el servidor.</p>', 'error');
+                        return;
+                    }
+                    if (confirm('¿Deseas reiniciar la encuesta actual?')) {
+                        adminSocket.emit('reset_poll');
+                    }
+                });
+            }
+        }
+
+        function connectAdminSocket() {
+            adminSocket = io();
+
+            adminSocket.on('connect', () => {
+                updatePollStatus('<p class="text-sm text-green-700">Conectado. Puedes crear una nueva encuesta.</p>', 'success');
+            });
+
+            adminSocket.on('poll_update', (poll) => {
+                renderAdminPoll(poll);
+            });
+
+            adminSocket.on('poll_clear', () => {
+                renderAdminPoll(null);
+            });
+
+            adminSocket.on('poll_error', (payload = {}) => {
+                updatePollStatus(`<p class="text-sm">${escapeHtml(payload.message || 'No se pudo procesar la encuesta.')}</p>`, 'error');
+            });
+
+            adminSocket.on('disconnect', () => {
+                updatePollStatus('<p class="text-sm">Conexión perdida. Intentando reconectar...</p>', 'error');
+            });
+        }
+
+        function renderAdminPoll(poll) {
+            if (!poll) {
+                updatePollStatus('<p class="text-sm text-gray-600">No hay una encuesta activa.</p>', 'info');
+                return;
+            }
+
+            const options = poll.options || {};
+            const totalVotes = Object.values(options).reduce((sum, count) => sum + Number(count || 0), 0);
+            const optionsHtml = Object.entries(options).map(([option, count]) => {
+                const percent = calculatePollPercent(count, totalVotes);
+                return `
+                    <div class="flex justify-between items-center bg-white border border-gray-200 rounded-lg px-3 py-2">
+                        <span class="font-medium text-gray-800">${escapeHtml(option)}</span>
+                        <span class="text-sm text-gray-600">${count} votos (${percent}%)</span>
+                    </div>
+                `;
+            }).join('');
+
+            updatePollStatus(`
+                <div>
+                    <p class="text-sm font-semibold text-gray-900">${escapeHtml(poll.question)}</p>
+                    <p class="text-xs text-gray-500">${totalVotes === 1 ? '1 voto' : `${totalVotes} votos`} registrados${poll.createdAt ? ` • ${formatDate(poll.createdAt)}` : ''}</p>
+                </div>
+                <div class="mt-3 space-y-2">${optionsHtml}</div>
+            `, 'success');
+        }
+
+        function updatePollStatus(content, type = 'info') {
+            if (!pollStatusElement) return;
+            const variants = {
+                error: 'bg-red-50 border border-red-200 text-red-700',
+                info: 'bg-gray-50 border border-gray-200 text-gray-700',
+                success: 'bg-green-50 border border-green-200 text-green-700'
+            };
+            pollStatusElement.className = `mb-4 rounded-lg px-4 py-3 ${variants[type] || variants.info}`;
+            pollStatusElement.innerHTML = content;
+        }
+
+        function calculatePollPercent(count, total) {
+            if (!total) return 0;
+            return Math.round((Number(count || 0) / total) * 100);
+        }
+
+        // Cambiar network key
+        document.getElementById('change-key-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newKeyInput = document.getElementById('new-network-key');
+            const newKey = newKeyInput.value.trim();
+            const statusDiv = document.getElementById('change-key-status');
+
+            if (!newKey) {
+                statusDiv.innerHTML = `<span class="text-red-600">La clave no puede estar vacía.</span>`;
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/network-key', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ newKey })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusDiv.innerHTML = `<span class="text-green-600">✅ Network Key actualizada correctamente.</span>`;
+                    newKeyInput.value = '';
+                    loadStats(); // Recargar para mostrar la nueva clave
+                } else {
+                    statusDiv.innerHTML = `<span class="text-red-600">❌ Error: ${data.error}</span>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="text-red-600">❌ Error de conexión al actualizar la clave.</span>`;
+            }
+        });
+
+    </script>
+</body>
+</html>
