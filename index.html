@@ -1,266 +1,943 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Anónimo - Acceso</title>
+    <title>25N - Eliminación de la Violencia contra la Mujer</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&family=Open+Sans:wght@400;600&display=swap');
+
+        :root {
+            --orange-primary: #FF5722;
+            --orange-soft: #FFCCBC;
+            --purple-deep: #4A148C;
+            --text-dark: #212121;
+        }
+
         body {
-            background-color: #0f172a;
-            background-image: 
-                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
-            animation: bg-pulse 15s ease-in-out infinite alternate;
+            font-family: 'Open Sans', sans-serif;
+            scroll-behavior: smooth;
         }
-        @keyframes bg-pulse {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Montserrat', sans-serif;
         }
-        .form-container {
-            background-color: rgba(17, 24, 39, 0.8);
-            backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            animation: fadeInUp 0.8s ease-out;
-        }
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .tab-underline {
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            height: 2px;
-            background-color: #3b82f6;
-            transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
-        }
-        .input-icon {
-            position: absolute;
-            left: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af;
-            transition: color 0.2s;
-        }
-        input:focus + .input-icon, input:focus ~ .input-icon {
-            color: #3b82f6;
-        }
-        .error-banner {
-            transition: all 0.3s ease-in-out;
-            transform-origin: top;
-        }
-        .error-banner.hidden {
-            transform: scaleY(0.9) translateY(-10px);
+
+        /* Animaciones CSS controladas por JS */
+        .reveal {
             opacity: 0;
-            height: 0;
-            padding-top: 0;
-            padding-bottom: 0;
-            margin-bottom: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
         }
-        .btn-primary {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.5), 0 4px 6px -2px rgba(59, 130, 246, 0.3);
-        }
-        .btn-primary:active {
+
+        .reveal.active {
+            opacity: 1;
             transform: translateY(0);
-            box-shadow: none;
+        }
+
+        .fade-in-left {
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: all 0.8s ease-out;
+        }
+
+        .fade-in-right {
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.8s ease-out;
+        }
+
+        .active-side {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Estilos específicos del formulario */
+        .custom-radio:checked+div {
+            background-color: #F3E5F5;
+            border-color: var(--purple-deep);
+            color: var(--purple-deep);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(74, 20, 140, 0.2);
+        }
+
+        .question-block {
+            padding: 1.5rem;
+            border-radius: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .question-block:hover {
+            background-color: #FAFAFA;
+        }
+
+        .hand-icon {
+            animation: stop-motion 2s infinite ease-in-out;
+        }
+
+        @keyframes stop-motion {
+            0% {
+                transform: scale(1) rotate(0deg);
+            }
+
+            25% {
+                transform: scale(1.1) rotate(-5deg);
+            }
+
+            50% {
+                transform: scale(1.1) rotate(5deg);
+            }
+
+            75% {
+                transform: scale(1.1) rotate(-5deg);
+            }
+
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        .scroll-top-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--orange-primary);
+            color: white;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .scroll-top-btn.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .scroll-top-btn:hover {
+            background-color: #E64A19;
+            transform: translateY(-5px);
+        }
+
+        .result-box {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 1s ease-in-out, opacity 1s ease-in-out;
+            opacity: 0;
+        }
+
+        .result-box.show {
+            max-height: 1000px;
+            opacity: 1;
+        }
+
+        /* Gradiente animado del Hero */
+        .hero-bg {
+            background: linear-gradient(135deg, #FF5722, #FF8A65, #4A148C);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Loading spinner para el botón */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #ffffff;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8 font-sans">
-    <div class="max-w-md w-full space-y-6">
-        <!-- Logo y Título -->
-        <div class="text-center">
-            <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-blue-500/20 text-blue-400">
-                <i class="fas fa-comments fa-2x"></i>
+
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md shadow-md transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-orange-600 tracking-wider">25N</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#inicio" class="text-gray-700 hover:text-orange-600 font-semibold transition">Inicio</a>
+                    <a href="#informacion"
+                        class="text-gray-700 hover:text-orange-600 font-semibold transition">Historia</a>
+                    <a href="#tipos" class="text-gray-700 hover:text-orange-600 font-semibold transition">Tipos de
+                        Violencia</a>
+                    <a href="chat_login.html" class="text-gray-700 hover:text-blue-600 font-semibold transition"><i
+                            class="fas fa-comments mr-1"></i>Chat Anónimo</a>
+                    <a href="#encuesta"
+                        class="px-4 py-2 rounded-full bg-purple-800 text-white hover:bg-purple-900 transition shadow-lg">Realidad
+                        Diaria</a>
+                </div>
             </div>
-            <h2 class="mt-4 text-3xl font-extrabold text-white">
-                Bienvenido al Chat
-            </h2>
-            <p class="mt-2 text-sm text-gray-400">Inicia sesión o regístrate para continuar</p>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header id="inicio" class="hero-bg min-h-screen flex items-center justify-center relative text-white px-4">
+        <div class="absolute inset-0 bg-black/30"></div>
+        <div class="relative z-10 text-center max-w-4xl">
+            <div class="mb-6 hand-icon text-6xl md:text-8xl">✋</div>
+            <h1 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight drop-shadow-lg">
+                Día Internacional de la Eliminación de la Violencia contra la Mujer
+            </h1>
+            <p class="text-xl md:text-2xl mb-10 font-light drop-shadow-md">
+                No estás sola. Rompamos el silencio. Construyamos un futuro libre de violencia.
+            </p>
+            <a href="#informacion"
+                class="inline-block px-8 py-4 bg-white text-orange-600 font-bold rounded-full text-lg shadow-xl hover:bg-gray-100 transform hover:-translate-y-1 transition duration-300">
+                ¿Por qué el 25N?
+            </a>
         </div>
 
-        <div class="form-container rounded-2xl shadow-2xl p-8 space-y-6">
-            <!-- Tabs -->
-            <div class="relative border-b-2 border-gray-700">
-                <div class="flex">
-                    <button id="tab-login" class="flex-1 py-3 px-4 text-center font-semibold text-gray-300 focus:outline-none">
-                        Iniciar Sesión
-                    </button>
-                    <button id="tab-register" class="flex-1 py-3 px-4 text-center font-semibold text-gray-500 focus:outline-none">
-                        Registro
-                    </button>
+        <!-- Wave Divider -->
+        <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180">
+            <svg class="relative block w-[calc(100%+1.3px)] h-[60px]" data-name="Layer 1"
+                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path
+                    d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
+                    class="fill-gray-50"></path>
+            </svg>
+        </div>
+    </header>
+
+    <!-- Info Section: History -->
+    <section id="informacion" class="py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="reveal fade-in-left">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-6 border-l-8 border-orange-500 pl-4">¿Por qué el 25
+                        de Noviembre?</h2>
+                    <p class="text-lg text-gray-600 mb-4 leading-relaxed">
+                        Esta fecha conmemora el brutal asesinato de las hermanas <strong>Patria, Minerva y María Teresa
+                            Mirabal</strong> en 1960, por orden del dictador Rafael Trujillo en la República Dominicana.
+                    </p>
+                    <p class="text-lg text-gray-600 mb-4 leading-relaxed">
+                        Conocidas como "Las Mariposas", se convirtieron en el símbolo mundial de la lucha contra la
+                        violencia de género. En 1999, la ONU oficializó esta fecha.
+                    </p>
+                    <div class="mt-6 flex items-center space-x-4">
+                        <div class="w-4 h-4 rounded-full bg-orange-500"></div>
+                        <span class="text-orange-600 font-semibold">Día Naranja: Un futuro brillante y sin
+                            violencia.</span>
+                    </div>
                 </div>
-                <div id="tab-underline" class="tab-underline"></div>
+                <div class="reveal fade-in-right relative">
+                    <div class="absolute -inset-4 bg-orange-200 rounded-lg transform rotate-3 -z-10"></div>
+                    <img src="https://images.unsplash.com/photo-1596704017254-9b121068fb31?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+                        alt="Mujeres unidas"
+                        class="rounded-lg shadow-2xl w-full object-cover h-96 grayscale hover:grayscale-0 transition duration-700">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Types of Violence Cards -->
+    <section id="tipos" class="py-20 bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl md:text-4xl font-bold text-purple-900 mb-4">La violencia no es solo física</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Muchas veces la violencia es invisible. Reconocerla es el
+                    primer paso para detenerla.</p>
             </div>
 
-            <!-- Formulario de Login -->
-            <form id="login-form" class="space-y-6">
-                <div class="relative">
-                    <div class="input-icon">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <input id="login-username" name="username" type="text" required class="pl-10 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombre de Usuario">
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Card 1 -->
+                <div
+                    class="reveal bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition duration-300 border-t-4 border-purple-600 transform hover:-translate-y-2">
+                    <div class="text-purple-600 text-4xl mb-4"><i class="fas fa-brain"></i></div>
+                    <h3 class="text-xl font-bold mb-3">Violencia Psicológica</h3>
+                    <p class="text-gray-600">Humillaciones, control, celos excesivos, aislamiento de amigos y
+                        familiares, amenazas y manipulación emocional.</p>
                 </div>
-                <div class="relative">
-                    <div class="input-icon">
-                        <i class="fas fa-lock"></i>
-                    </div>
-                    <input id="login-password" name="password" type="password" required class="pl-10 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Contraseña">
+                <!-- Card 2 -->
+                <div class="reveal bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition duration-300 border-t-4 border-orange-500 transform hover:-translate-y-2"
+                    style="transition-delay: 100ms;">
+                    <div class="text-orange-500 text-4xl mb-4"><i class="fas fa-hand-holding-usd"></i></div>
+                    <h3 class="text-xl font-bold mb-3">Violencia Económica</h3>
+                    <p class="text-gray-600">Controlar el acceso al dinero, prohibir trabajar o estudiar, o
+                        incumplimiento de las obligaciones alimentarias.</p>
                 </div>
-                <div class="relative">
-                    <div class="input-icon">
-                        <i class="fas fa-key"></i>
-                    </div>
-                    <input id="login-network-key" name="networkKey" type="password" required class="pl-10 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Network Key">
+                <!-- Card 3 -->
+                <div class="reveal bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition duration-300 border-t-4 border-red-500 transform hover:-translate-y-2"
+                    style="transition-delay: 200ms;">
+                    <div class="text-red-500 text-4xl mb-4"><i class="fas fa-user-injured"></i></div>
+                    <h3 class="text-xl font-bold mb-3">Violencia Física y Sexual</h3>
+                    <p class="text-gray-600">Cualquier acción que provoque daño físico, así como obligar a tener
+                        relaciones sexuales o contacto no deseado.</p>
                 </div>
-                <div id="login-error" class="hidden error-banner bg-red-500/10 border-l-4 border-red-400 text-red-400 px-4 py-3" role="alert"></div>
-                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 btn-primary">Iniciar Sesión</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Survey Section -->
+    <section id="encuesta" class="py-20 relative overflow-hidden">
+        <!-- Background decorative elements -->
+        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-purple-100 rounded-full opacity-50 blur-3xl">
+        </div>
+        <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-orange-100 rounded-full opacity-50 blur-3xl">
+        </div>
+
+        <div class="max-w-4xl mx-auto px-4 relative z-10">
+            <div class="text-center mb-12 reveal">
+                <span class="text-orange-600 font-bold tracking-widest uppercase text-sm">Cuestionario Anónimo</span>
+                <h2 class="text-4xl font-bold text-gray-800 mt-2">¿Cómo vives tu día a día?</h2>
+                <p class="text-gray-600 mt-4">Responde estas preguntas para reflexionar y tus respuestas nos ayudarán a
+                    generar estadísticas (todo es anónimo).</p>
+                <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200 max-w-2xl mx-auto">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <strong>Nota:</strong> Para guardar en Google Forms, configura la URL de tu formulario en el
+                        código.
+                        Las respuestas también se guardan en nuestra base de datos de forma anónima.
+                    </p>
+                </div>
+            </div>
+
+            <form id="violenceForm" class="bg-white rounded-3xl shadow-xl p-8 md:p-12 reveal">
+                <!-- Progress Bar -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-semibold text-gray-600">Progreso</span>
+                        <span id="progressText" class="text-sm font-semibold text-purple-600">0/10</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div id="progressBar"
+                            class="bg-gradient-to-r from-purple-500 to-orange-500 h-3 rounded-full transition-all duration-500 ease-out"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+
+                    <!-- Question 1 -->
+                    <div class="question-block">
+                        <label class="block text-lg font-semibold text-gray-800 mb-4">1. ¿Alguna vez has cambiado tu
+                            ruta a casa por miedo a ser acosada?</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q1" value="yes" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-check-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">Sí</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q1" value="no" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-times-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">No</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 2 -->
+                    <div class="question-block">
+                        <label class="block text-lg font-semibold text-gray-800 mb-4">2. ¿Tu pareja o entorno revisa tu
+                            celular o te pide contraseñas?</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q2" value="yes" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-check-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">Sí</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q2" value="no" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-times-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">No</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 3 -->
+                    <div class="question-block">
+                        <label class="block text-lg font-semibold text-gray-800 mb-4">3. ¿Te han hecho comentarios
+                            inapropiados sobre tu cuerpo en el trabajo o escuela?</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q3" value="yes" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-check-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">Sí</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q3" value="no" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-times-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">No</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 4 -->
+                    <div class="question-block">
+                        <label class="block text-lg font-semibold text-gray-800 mb-4">4. ¿Sientes que tus opiniones son
+                            menospreciadas por ser mujer?</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q4" value="yes" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-check-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">Sí</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q4" value="no" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-times-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">No</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 5 -->
+                    <div class="question-block">
+                        <label class="block text-lg font-semibold text-gray-800 mb-4">5. ¿Has sentido miedo de decir
+                            "no" a alguien por las consecuencias que podría tener?</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q5" value="yes" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-check-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">Sí</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q5" value="no" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-times-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">No</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 6 -->
+                    <div class="question-block">
+                        <label class="block text-lg font-semibold text-gray-800 mb-4">6. ¿Alguien controla cómo gastas
+                            tu dinero o te prohíbe trabajar o estudiar?</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q6" value="yes" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-check-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">Sí</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q6" value="no" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-times-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">No</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 7 -->
+                    <div class="question-block">
+                        <label class="block text-lg font-semibold text-gray-800 mb-4">7. ¿Te han amenazado, insultado o
+                            humillado en público o privado?</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q7" value="yes" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-check-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">Sí</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q7" value="no" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-times-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">No</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 8 -->
+                    <div class="question-block">
+                        <label class="block text-lg font-semibold text-gray-800 mb-4">8. ¿Has sido presionada o forzada
+                            a tener relaciones sexuales o contacto físico no deseado?</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q8" value="yes" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-check-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">Sí</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q8" value="no" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-times-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">No</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 9 -->
+                    <div class="question-block">
+                        <label class="block text-lg font-semibold text-gray-800 mb-4">9. ¿Te han aislado de tus amigos,
+                            familia o redes de apoyo?</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q9" value="yes" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-check-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">Sí</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q9" value="no" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-times-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">No</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 10 -->
+                    <div class="question-block">
+                        <label class="block text-lg font-semibold text-gray-800 mb-4">10. ¿Has recibido mensajes,
+                            llamadas o contactos no deseados de forma persistente?</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q10" value="yes" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-check-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">Sí</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="q10" value="no" class="hidden custom-radio">
+                                <div
+                                    class="border-2 border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition">
+                                    <i class="fas fa-times-circle mb-2 text-2xl"></i>
+                                    <span class="block font-semibold">No</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="mt-10 text-center space-y-4">
+                    <button type="submit" id="submitBtn"
+                        class="bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-orange-500/50 transform hover:scale-105 transition duration-300 text-lg flex items-center justify-center mx-auto disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                        <span id="btnText">Verificar y Guardar</span>
+                    </button>
+                    <p class="text-xs text-gray-500">
+                        <i class="fas fa-shield-alt mr-1"></i>
+                        Tus respuestas son completamente anónimas y se guardan de forma segura.
+                    </p>
+                </div>
             </form>
 
-            <!-- Formulario de Registro -->
-            <form id="register-form" class="hidden space-y-6">
-                <div class="relative">
-                    <div class="input-icon">
-                        <i class="fas fa-user-plus"></i>
+            <!-- Results Section (Hidden by default) -->
+            <div id="results" class="result-box mt-8">
+                <div class="bg-purple-900 text-white rounded-3xl p-8 md:p-12 shadow-2xl border border-purple-500">
+                    <div class="flex flex-col md:flex-row items-center gap-8">
+                        <div class="flex-1">
+                            <h3 id="resultTitle" class="text-3xl font-bold mb-4 text-orange-400"></h3>
+                            <p id="resultText" class="text-lg leading-relaxed text-gray-200 mb-6"></p>
+                            <div class="bg-white/10 rounded-lg p-6 backdrop-blur-sm">
+                                <h4 class="font-bold text-white mb-3"><i class="fas fa-life-ring mr-2"></i>Recursos de
+                                    Ayuda</h4>
+                                <ul class="space-y-2 text-sm md:text-base mb-4">
+                                    <li>• <strong>Emergencias:</strong> Llama al <strong>911</strong> o el número de
+                                        emergencia de tu país.</li>
+                                    <li>• <strong>Líneas de ayuda:</strong> Busca "Línea Mujeres" o servicios de
+                                        atención a la violencia de género en tu localidad.</li>
+                                    <li>• <strong>Organizaciones:</strong> Contacta ONGs y centros de atención
+                                        especializados.</li>
+                                    <li>• <strong>Redes de apoyo:</strong> Habla con familiares, amigos o profesionales
+                                        de confianza.</li>
+                                </ul>
+                                <div class="mt-4 pt-4 border-t border-white/20">
+                                    <p class="text-orange-300 font-semibold">
+                                        <i class="fas fa-heart mr-2"></i>
+                                        Recuerda: <strong>No es tu culpa y no estás sola.</strong>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="md:w-1/3 flex justify-center">
+                            <i class="fas fa-hands-helping text-9xl text-orange-500 opacity-80"></i>
+                        </div>
                     </div>
-                    <input id="register-username" name="username" type="text" required class="pl-10 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombre de Usuario (3-20 caracteres)">
                 </div>
-                <div class="relative">
-                    <div class="input-icon">
-                        <i class="fas fa-lock"></i>
-                    </div>
-                    <input id="register-password" name="password" type="password" required class="pl-10 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Contraseña (mín. 6 caracteres)">
-                </div>
-                <div class="relative">
-                    <div class="input-icon">
-                        <i class="fas fa-key"></i>
-                    </div>
-                    <input id="register-network-key" name="networkKey" type="password" required class="pl-10 w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Network Key">
-                </div>
-                <div id="register-error" class="hidden error-banner bg-red-500/10 border-l-4 border-red-400 text-red-400 px-4 py-3" role="alert"></div>
-                <div id="register-success" class="hidden error-banner bg-green-500/10 border-l-4 border-green-400 text-green-400 px-4 py-3" role="alert"></div>
-                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 btn-primary">Registrarse</button>
-            </form>
+            </div>
         </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <h3 class="text-2xl font-bold mb-4">Ni una menos.</h3>
+            <p class="text-gray-400 mb-8">
+                Este sitio es informativo y busca generar conciencia sobre la violencia de género.
+            </p>
+            <div class="flex justify-center space-x-6 mb-8">
+                <a href="#" class="text-2xl hover:text-orange-500 transition"><i class="fab fa-facebook"></i></a>
+                <a href="#" class="text-2xl hover:text-orange-500 transition"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="text-2xl hover:text-orange-500 transition"><i class="fab fa-instagram"></i></a>
+            </div>
+            <p class="text-sm text-gray-600">&copy; 2024 Conmemoración del 25N.</p>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <div id="scrollTopBtn" class="scroll-top-btn">
+        <i class="fas fa-arrow-up"></i>
     </div>
 
-    <script>
-        const tabLogin = document.getElementById('tab-login');
-        const tabRegister = document.getElementById('tab-register');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const underline = document.getElementById('tab-underline');
+    <!-- Firebase Integration -->
+    <script type="module">
+        // Variables globales para Firebase (se inicializarán si está configurado)
+        let db = null;
+        let serverTimestamp = null;
+        let collection = null;
+        let addDoc = null;
+        let appId = 'default-app-id';
 
-        function switchTab(tab) {
-            const errorDivs = document.querySelectorAll('.error-banner');
-            errorDivs.forEach(div => div.classList.add('hidden'));
+        // Intentar cargar Firebase solo si está configurado
+        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+            try {
+                const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+                const firestoreModule = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
+                const authModule = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
 
-            if (tab === 'login') {
-                tabLogin.classList.remove('text-gray-500');
-                tabLogin.classList.add('text-gray-300');
-                tabRegister.classList.add('text-gray-500');
-                loginForm.classList.remove('hidden');
-                registerForm.classList.add('hidden');
-                underline.style.transform = `translateX(0%)`;
-                underline.style.width = tabLogin.offsetWidth + 'px';
-            } else {
-                tabRegister.classList.remove('text-gray-500');
-                tabRegister.classList.add('text-gray-300');
-                tabLogin.classList.add('text-gray-500');
-                registerForm.classList.remove('hidden');
-                loginForm.classList.add('hidden');
-                underline.style.transform = `translateX(${tabLogin.offsetWidth}px)`;
-                underline.style.width = tabRegister.offsetWidth + 'px';
+                const { getFirestore, collection: col, addDoc: add, serverTimestamp: ts } = firestoreModule;
+                const { getAuth, signInAnonymously } = authModule;
+
+                // Configuración de Firebase
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                db = getFirestore(app);
+                collection = col;
+                addDoc = add;
+                serverTimestamp = ts;
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+                // Autenticación anónima inmediata
+                signInAnonymously(auth).then(() => {
+                    console.log("Conectado anónimamente para guardar encuestas");
+                }).catch((error) => {
+                    console.error("Error de autenticación", error);
+                });
+            } catch (error) {
+                console.warn("Firebase no está configurado o hay un error:", error);
+                console.log("El formulario funcionará sin Firebase. Solo se guardará en Google Forms si está configurado.");
             }
+        } else {
+            console.log("Firebase no está configurado. El formulario funcionará sin Firebase.");
         }
 
-        tabLogin.addEventListener('click', () => switchTab('login'));
-        tabRegister.addEventListener('click', () => switchTab('register'));
-        
-        window.addEventListener('load', () => switchTab('login'));
-        window.addEventListener('resize', () => switchTab(loginForm.classList.contains('hidden') ? 'register' : 'login'));
+        // Configuración de Google Forms
+        // INSTRUCCIONES: 
+        // 1. Crea un formulario de Google en: https://forms.google.com
+        // 2. Agrega 10 preguntas de opción múltiple (Sí/No) en el mismo orden
+        // 3. Obtén el ID del formulario de la URL: https://docs.google.com/forms/d/FORM_ID/viewform
+        // 4. Para obtener los entry IDs, abre el formulario en modo edición, 
+        //    haz clic derecho en cada pregunta > Inspeccionar > busca "entry."
+        // 5. Reemplaza los valores abajo con tu FORM_ID y entry IDs
+        const GOOGLE_FORM_CONFIG = {
+            enabled: false, // Cambia a true cuando tengas los Entry IDs configurados
+            formId: '1FAIpQLSdYK9Vde8Faed_4BF5H7aeECn-zrJr8wlubfdpZlHn1c0-wbg', // Tu Form ID
+            entryIds: {
+                q1: 'entry.123456789', // Obtén estos IDs usando obtener_entry_ids_del_formulario.html
+                q2: 'entry.987654321',
+                q3: 'entry.111111111',
+                q4: 'entry.222222222',
+                q5: 'entry.333333333',
+                q6: 'entry.444444444',
+                q7: 'entry.555555555',
+                q8: 'entry.666666666',
+                q9: 'entry.777777777',
+                q10: 'entry.888888888'
+            }
+        };
 
-        function showError(form, message) {
-            const errorDiv = document.getElementById(`${form}-error`);
-            errorDiv.textContent = message;
-            errorDiv.classList.remove('hidden');
+        // Función para enviar datos a Google Forms
+        async function submitToGoogleForms(answers, yesCount, category) {
+            if (!GOOGLE_FORM_CONFIG.enabled || !GOOGLE_FORM_CONFIG.formId || GOOGLE_FORM_CONFIG.formId === 'TU_FORM_ID_AQUI') {
+                console.log("Google Forms no está configurado. Saltando envío.");
+                return;
+            }
+
+            const formUrl = `https://docs.google.com/forms/d/e/${GOOGLE_FORM_CONFIG.formId}/formResponse`;
+            const formData = new FormData();
+
+            // Mapear respuestas a los entry IDs
+            const entryMap = GOOGLE_FORM_CONFIG.entryIds;
+            Object.keys(answers).forEach((key, index) => {
+                const entryId = entryMap[key];
+                if (entryId) {
+                    // Convertir yes/no a valores que Google Forms acepte
+                    const value = answers[key] === 'yes' ? 'Sí' : 'No';
+                    formData.append(entryId, value);
+                }
+            });
+
+            // Enviar datos usando fetch
+            const response = await fetch(formUrl, {
+                method: 'POST',
+                mode: 'no-cors', // Google Forms no permite CORS, usamos no-cors
+                body: formData
+            });
+
+            console.log("Datos enviados a Google Forms");
         }
-        
-        function showSuccess(message) {
-            const successDiv = document.getElementById('register-success');
-            successDiv.textContent = message;
-            successDiv.classList.remove('hidden');
-        }
 
-        registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            document.getElementById('register-error').classList.add('hidden');
-            document.getElementById('register-success').classList.add('hidden');
+        // Lógica de Animación (Intersection Observer)
+        document.addEventListener('DOMContentLoaded', () => {
 
-            const formData = {
-                username: document.getElementById('register-username').value,
-                password: document.getElementById('register-password').value,
-                networkKey: document.getElementById('register-network-key').value
+            // Scroll reveal animation
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: "0px 0px -50px 0px"
             };
 
-            try {
-                const response = await fetch('/api/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        if (entry.target.classList.contains('fade-in-left') || entry.target.classList.contains('fade-in-right')) {
+                            entry.target.classList.add('active-side');
+                        }
+                    }
                 });
-                const data = await response.json();
-                if (response.ok) {
-                    showSuccess('Registro exitoso. Ahora puedes iniciar sesión.');
-                    setTimeout(() => switchTab('login'), 2000);
-                } else {
-                    showError('register', data.error || 'Error al registrarse');
-                }
-            } catch (error) {
-                showError('register', 'Error de conexión. Verifica que el servidor esté corriendo.');
-            }
-        });
+            }, observerOptions);
 
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            document.getElementById('login-error').classList.add('hidden');
+            const revealElements = document.querySelectorAll('.reveal');
+            revealElements.forEach(el => observer.observe(el));
 
-            const formData = {
-                username: document.getElementById('login-username').value,
-                password: document.getElementById('login-password').value,
-                networkKey: document.getElementById('login-network-key').value
-            };
+            // Actualizar barra de progreso
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const radioInputs = document.querySelectorAll('input[type="radio"]');
 
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
+            function updateProgress() {
+                const totalQuestions = 10;
+                const answeredQuestions = new Set();
+
+                radioInputs.forEach(input => {
+                    if (input.checked) {
+                        answeredQuestions.add(input.name);
+                    }
                 });
-                const data = await response.json();
-                if (response.ok) {
-                    window.location.href = '/chat.html';
-                } else {
-                    showError('login', data.error || 'Error al iniciar sesión');
-                }
-            } catch (error) {
-                showError('login', 'Error de conexión. Verifica que el servidor esté corriendo.');
+
+                const progress = (answeredQuestions.size / totalQuestions) * 100;
+                progressBar.style.width = progress + '%';
+                progressText.textContent = `${answeredQuestions.size}/${totalQuestions}`;
             }
+
+            radioInputs.forEach(input => {
+                input.addEventListener('change', updateProgress);
+            });
+
+            // Lógica del Formulario y Guardado
+            const form = document.getElementById('violenceForm');
+            const resultBox = document.getElementById('results');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultText = document.getElementById('resultText');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Contar respuestas "sí"
+                const formData = new FormData(form);
+                let yesCount = 0;
+                let totalAnswered = 0;
+                let answers = {};
+
+                for (let [key, value] of formData.entries()) {
+                    totalAnswered++;
+                    answers[key] = value;
+                    if (value === 'yes') yesCount++;
+                }
+
+                if (totalAnswered < 10) {
+                    alert("Por favor, responde todas las preguntas para obtener un resultado.");
+                    return;
+                }
+
+                // Determinar mensaje
+                let title = "";
+                let message = "";
+
+                if (yesCount === 0) {
+                    title = "Entorno Saludable";
+                    message = "Tus respuestas indican que, en estas situaciones específicas, no estás expuesta a violencia. Sin embargo, mantente siempre alerta y apoya a otras mujeres que puedan necesitarlo. La violencia puede ser sutil y manifestarse de formas que no siempre reconocemos inmediatamente.";
+                } else if (yesCount <= 3) {
+                    title = "Señales de Alerta";
+                    message = "Has identificado algunas situaciones de violencia o control. No normalices estas conductas. El amor no controla, el trabajo no debe humillar y la calle debe ser segura. Considera hablar con alguien de confianza o buscar orientación profesional.";
+                } else if (yesCount <= 6) {
+                    title = "Situación de Preocupación";
+                    message = "Tus respuestas muestran múltiples indicadores de violencia. Es importante que reconozcas que estas situaciones NO son normales y NO son tu culpa. Te recomendamos buscar apoyo profesional, contactar líneas de ayuda o acudir a servicios especializados en tu localidad.";
+                } else {
+                    title = "Situación de Alto Riesgo";
+                    message = "Tus respuestas indican que vives múltiples formas de violencia en tu día a día. Es fundamental que sepas que esto NO es normal y NO es tu culpa. Busca ayuda inmediata: contacta líneas de emergencia, servicios de atención a la violencia de género, o acude a autoridades competentes. No estás sola.";
+                }
+
+                // UI Loading
+                const originalText = btnText.innerText;
+                btnText.innerText = "Guardando...";
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner';
+                submitBtn.prepend(spinner);
+                submitBtn.disabled = true;
+
+                // Guardar en Firebase (solo si está configurado)
+                if (db && addDoc && collection && serverTimestamp) {
+                    try {
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'encuestas_25n'), {
+                            respuestas: answers,
+                            categoria_resultado: title,
+                            puntaje_riesgo: yesCount,
+                            fecha: serverTimestamp(),
+                            dispositivo: /Mobi|Android/i.test(navigator.userAgent) ? 'movil' : 'desktop'
+                        });
+                        console.log("Datos guardados exitosamente en Firebase");
+                    } catch (error) {
+                        console.error("Error al guardar en Firebase:", error);
+                    }
+                } else {
+                    console.log("Firebase no está configurado. Saltando guardado en Firebase.");
+                }
+
+                // Guardar en Google Forms (si está configurado)
+                try {
+                    await submitToGoogleForms(answers, yesCount, title);
+                } catch (error) {
+                    console.error("Error al guardar en Google Forms:", error);
+                    // No bloqueamos si falla Google Forms
+                } finally {
+                    // Restaurar botón
+                    spinner.remove();
+                    btnText.innerText = "Resultado Generado";
+                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+
+                // Actualizar contenido
+                resultTitle.textContent = title;
+                resultText.textContent = message;
+
+                // Agregar información adicional
+                const resultInfo = document.createElement('div');
+                resultInfo.className = 'mt-4 p-4 bg-green-500/20 rounded-lg border border-green-400/30';
+                resultInfo.innerHTML = `
+                    <p class="text-green-200 text-sm">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <strong>Respuestas guardadas:</strong> Tus respuestas han sido registradas de forma anónima para generar estadísticas y ayudar a visibilizar la realidad.
+                    </p>
+                `;
+                resultText.parentElement.appendChild(resultInfo);
+
+                // Animar resultados
+                resultBox.classList.add('show');
+
+                // Scroll hacia resultados
+                setTimeout(() => {
+                    resultBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            });
+            // Scroll to Top Logic
+            const scrollTopBtn = document.getElementById('scrollTopBtn');
+
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 300) {
+                    scrollTopBtn.classList.add('visible');
+                } else {
+                    scrollTopBtn.classList.remove('visible');
+                }
+            });
+
+            scrollTopBtn.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         });
     </script>
 </body>
+
 </html>
